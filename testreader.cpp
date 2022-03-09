@@ -31,9 +31,9 @@ int main(int argc, char* argv[]) {
 	Ref ref(book, chap, verse);
 
 
-	cout << "Result before lookup: " << result << endl;
 	Verse v = webBible.lookup(ref, result);
-	cout << "Result after lookup: " << result << endl;
+
+
 	if (result != SUCCESS) {
 		cout << "Lookup no success";
 		cout << webBible.error(result, ref);
@@ -50,6 +50,9 @@ int main(int argc, char* argv[]) {
 			return 0;
 		}
 		//this avoids printing the full reference redundantly
+		if (next.getRef().getVerse() == 1) {
+			cout << next.getRef().getBookName() << " " << next.getRef().getChap() << "\n";
+		}
 		cout << next.getRef().getVerse() << " " << next.getVerse() << "\n";
 	}
 
