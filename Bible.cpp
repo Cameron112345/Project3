@@ -39,7 +39,15 @@ Verse Bible::lookup(Ref ref, LookupResult& status) {
 		x = index[ref];
 	}
 	else {
-		cout << "lookup failed";
+		Ref testBook(ref.getBook(), 1, 1);
+		Ref testChap(1, ref.getChap(), 1);
+		Ref testVerse(1, 1, ref.getVerse());
+
+		if (!refExists(testBook)) status = NO_BOOK;
+		else if (!refExists(testChap)) status = NO_CHAPTER;
+		else if (!refExists(testVerse)) status = NO_VERSE;
+		else status = UNKNOWN_ERROR;
+		return Verse();
 	}
 	instream.seekg(x);
 	string line;
@@ -47,6 +55,14 @@ Verse Bible::lookup(Ref ref, LookupResult& status) {
 
 	Verse v(line);
 	return v;
+}
+
+bool Bible::refExists(Ref ref) {
+	map<Ref, int>::iterator it;
+	it = index.find(ref);
+	if (it != index.end())
+		return true;
+	else return false;
 }
 
 // REQUIRED: lookup finds a given verse in this Bible
@@ -188,6 +204,10 @@ string Bible::error(LookupResult status, Ref ref) {
 		}
 		case (DIFFERENT_BOOK): {
 			return "Error: verses span more than 1 book\n";
+			break;
+		}
+		case (UNKNOWN_ERROR): {
+			return "Error: unknown error occurred\n";
 			break;
 		}
 	default: {

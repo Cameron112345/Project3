@@ -20,7 +20,7 @@
 using namespace std;
 
 // status codes to be returned when looking up a reference
-enum LookupResult { SUCCESS, NO_BOOK, NO_CHAPTER, NO_VERSE, END_OF_FILE, DIFFERENT_BOOK };
+enum LookupResult { SUCCESS, NO_BOOK, NO_CHAPTER, NO_VERSE, END_OF_FILE, DIFFERENT_BOOK, UNKNOWN_ERROR};
 
 class Bible {	// A class to represent a version of the bible
  private:
@@ -42,6 +42,7 @@ class Bible {	// A class to represent a version of the bible
    
    // REQUIRED: Find and return a verse in this Bible, given a reference
    Verse lookup(const Ref ref, LookupResult& status);
+   bool refExists(Ref ref);
    // REQUIRED:
    // Return the next verse from the Bible file stream if the file is open.
    // If the file is not open, open the file and return the first verse.
