@@ -35,7 +35,7 @@
 
 <head>
   <!-- $Id: bibleajax.html,v 1.8 rkasper Exp $ -->
-  <title>BibleAjax Example Search Form</title>
+  <title>Bible Project 3</title>
 </head>
 
 <script type="text/javascript">
@@ -55,7 +55,7 @@ function getresponse () {
 		return;
 	}
 	// NOTE: This page must be loaded from cs.mvnu.edu to avoid a cross-origin request violation.
-	XMLHttp.open("GET", "/class/csc3004/camcole/cgi-bin/bibleajax.cgi?"
+	XMLHttp.open("GET", "/class/csc3004/camcole/cgi-bin/biblelookupclient.cgi?"
 		+ "search_type=" + searchType.value
 		+ "&book=" + document.getElementById('book').value
 		+ "&chapter=" + document.getElementById('chapter').value

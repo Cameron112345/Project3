@@ -35,112 +35,65 @@ Verse Bible::lookup(Ref ref, LookupResult& status) {
 	map<Ref, int>::iterator it;
 	it = index.find(ref);
 	int x=0;
+
+
+	//If ref was found in index
 	if (it != index.end()) {
 		x = index[ref];
 	}
+	//If ref was not found
 	else {
+		//This is a reference for the input book number, chapter 1, and verse 1
+		//Since there is a chapter 1 verse 1 for every book, this will reveal if the book number is the issue
 		Ref testBook(ref.getBook(), 1, 1);
-		Ref testChap(1, ref.getChap(), 1);
-		Ref testVerse(1, 1, ref.getVerse());
 
+
+		//This only gets used if the book number is determined to not be the issue
+		//It used the input book number and chapter number, but verse 1
+		//Since there is a verse 1 to every book in the bible, it will reveal if the chapter number is the issue
+		Ref testChap(ref.getBook(), ref.getChap(), 1);
+
+
+		//test the book
 		if (!refExists(testBook)) status = NO_BOOK;
+
+
+		//test the chapter
 		else if (!refExists(testChap)) status = NO_CHAPTER;
-		else if (!refExists(testVerse)) status = NO_VERSE;
-		else status = UNKNOWN_ERROR;
+
+
+		//if book and chapter aren't the issue, then the issue must be the verse number
+		else status = NO_VERSE;
+
+
 		return Verse();
 	}
+
+
+	//move to the right position
 	instream.seekg(x);
+
+
+	//read the line
 	string line;
 	getline(instream, line);
+
 
 	Verse v(line);
 	return v;
 }
 
+
+//This function return true if ref exists within the index
+//return false otherwise
 bool Bible::refExists(Ref ref) {
 	map<Ref, int>::iterator it;
 	it = index.find(ref);
 	if (it != index.end())
 		return true;
-	else return false;
+	return false;
 }
 
-// REQUIRED: lookup finds a given verse in this Bible
-/*Verse Bible::lookup(Ref ref, LookupResult& status) {
-    // TODO: scan the file to retrieve the line that holds ref ...
-    // update the status variable
-	status = SUCCESS; // placeholder until retrieval is attempted
-	// create and return the verse object
-	Verse aVerse;   // default verse, to be replaced by a Verse object
-	                // that is constructed from a line in the file.
-
-	string buffer;
-	short c = 0; //placeholder for current lines book/chap/verse
-	short book = ref.getBook(); //shorthands for the requested reference numbers
-	short chap = ref.getChap();
-	short verse = ref.getVerse();
-	Ref r;
-
-	//loops through lines of the file until the correct book number is reached
-	while (c != book) {
-		getline(instream, buffer);
-		r = Ref(buffer);
-		c = r.getBook();
-		//tests if end of file is reached
-		if (instream.peek() == EOF) {
-			status = NO_BOOK;
-			aVerse = Verse(buffer);
-			return aVerse;
-		}
-	}
-
-	//After correct book is reached, read lines from file until correct chapter is reached
-	c = 1;
-	while (c != chap) {
-		getline(instream, buffer);
-		r = Ref(buffer);
-		c = r.getChap();
-		//tests if end of file is reached
-		if (instream.peek() == EOF) {
-			status = NO_CHAPTER;
-			aVerse = Verse(buffer);
-			return aVerse;
-		}
-		//tests if chapter exists within the book
-		if (r.getBook() != book) {
-			status = NO_CHAPTER;
-			aVerse = Verse(buffer);
-			return aVerse;
-		}
-	}
-
-	//after correct chapter is reached, loop through file until correct verse is found
-	c = 1;
-	while (c != verse) {
-		getline(instream, buffer);
-		r = Ref(buffer);
-		c = r.getVerse();
-		//tests if end of file is reached and ensures that requesting the last verse in the Bible does not throw an error
-		if (instream.peek() == EOF && c != verse) {
-			status = NO_VERSE;
-			aVerse = Verse(buffer);
-			return aVerse;
-		}
-		//tests if verse exists within the chapter
-		if (r.getChap() != chap) {
-			status = NO_VERSE;
-			aVerse = Verse(buffer);
-			return aVerse;
-		}
-	}
-
-	aVerse = Verse(buffer);
-	status = SUCCESS;
-    return(aVerse);
-}*/
-
-// REQUIRED: Return the next verse from the Bible file stream if the file is open.
-// If the file is not open, open the file and return the first verse.
 Verse Bible::nextVerse(LookupResult& status) {
 
 	//placeholders
@@ -204,6 +157,10 @@ string Bible::error(LookupResult status, Ref ref) {
 		}
 		case (DIFFERENT_BOOK): {
 			return "Error: verses span more than 1 book\n";
+			break;
+		}
+		case (BAD_FORMAT): {
+			return "Error: Incorrect format\n";
 			break;
 		}
 		case (UNKNOWN_ERROR): {

@@ -27,9 +27,9 @@ using namespace cgicc;
 #include "fifo.h"
 using namespace std;
 
-#include "textindex.h"
-
-#define logging // enable log file
+//stuff for logging
+#define logging
+#define LOG_FILENAME "/home/class/csc3004/tmp/camcole-bibleLog.log"
 #include "logfile.h"
 
 // Pipes for communication                                                      
@@ -37,49 +37,95 @@ string receive_pipe = "SSreply";
 string send_pipe = "SSrequest";
 
 int main() {
-  // prepare the response output,
-  // send required header before any other output
   cout << "Content-Type: text/plain\n\n" << endl;
-  
   Cgicc cgi;
-  form_iterator sstring = cgi.getElement("sstring");
-  string searchString = **sstring;
-  int length = searchString.length();
+
+  //If logging is enabled
+  #ifdef logging 
+    logFile.open(LOG_FILENAME, ios::out); 
+  #endif
+
   
+  //grab all the values from the url sent to cgi
+  form_iterator st = cgi.getElement("search_type");
+  form_iterator book = cgi.getElement("book");
+  form_iterator chapter = cgi.getElement("chapter");
+  form_iterator verse = cgi.getElement("verse");
+  form_iterator nv = cgi.getElement("num_verse");
+
+
+  //convert values to strings and combine them
+  string bookNum = book->getValue();
+  string chapterNum = chapter->getValue();
+  string verseNum = verse->getValue();
+  string searchString = bookNum + ":" + chapterNum + ":" + verseNum;
+  log("SearchString: " + searchString);
+  
+
+  //Create pipes
   Fifo recfifo(receive_pipe);
   Fifo sendfifo(send_pipe);
+  log("Pipes Created");
   
-#ifdef logging
-  logFile.open(logFilename.c_str(),ios::out);
-#endif
-  
+
+  //Open the send pipe
   sendfifo.openwrite();
-  log("Open request pipe");
+  log("sendfifo opened");
+
   
   // Call server to get results                                                 
   sendfifo.send(searchString);
-  log("Request: "+searchString);
 
+
+  //open the receiving pipe
   recfifo.openread();
-  log("Open reply fifo");
+  log("recfifo opened");
 
-  // output the response to the web page
-  string results = "";
-  int times = 0; // Counter for header lines
-  while (results != "$end") {
-    results = recfifo.recv();
-    log("Reply: "+results);
-    if (results != "$end") {
-      cout << results << endl;
-      if (times++ > 2) {
-	cout << "<br>";
-      }
-    }
+
+  //Recieve the response from the server
+  string results = recfifo.recv();
+  log("Retreived response from server");
+
+
+  //Peel the status number off the response
+  string statusNum = results.substr(0, 1);
+  results.erase(0, 1);
+
+
+  //Check if status is an error code (Not 0)
+  if (statusNum != "0") {
+      cout << "<p>Error Number: " << statusNum << "</p>" << endl;
+      cout << "<p>" << results << "</p>" << endl;
+      return 0;
   }
-  cout << endl; // flush output when done
+  
+
+  //Output the message inside of a p tag
+  cout << "<p>" << results << "</p>" << endl;
+
+
+  //See if multiple verses need to be displayed
+  int verseCount = nv->getIntegerValue();
+
+
+  for (int x = 1; x < verseCount; x++) {
+
+      //This string, "00:00:00", is recognized by the server as a request to send the results from the "nextVerse" function
+      sendfifo.send("00:00:00");
+
+      //This is the same procedure as above
+      results = recfifo.recv();
+      statusNum = results.substr(0, 1);
+      results.erase(0, 1);
+      if (statusNum != "0")
+          cout << "<p>Error Number: " << statusNum << "</p>" << endl;
+      cout << "<p>" << results << "</p>" << endl;
+  }
+
+  //Flushing output and closing pipes
+  cout << endl;
   recfifo.fifoclose();
-  log("close reply fifo");
   sendfifo.fifoclose();
-  log("close request fifo");
+  log("pipes closed");
   return 0;
 }

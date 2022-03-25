@@ -20,7 +20,7 @@
 using namespace std;
 
 // status codes to be returned when looking up a reference
-enum LookupResult { SUCCESS, NO_BOOK, NO_CHAPTER, NO_VERSE, END_OF_FILE, DIFFERENT_BOOK, UNKNOWN_ERROR};
+enum LookupResult { SUCCESS, NO_BOOK, NO_CHAPTER, NO_VERSE, END_OF_FILE, DIFFERENT_BOOK, BAD_FORMAT, UNKNOWN_ERROR};
 
 class Bible {	// A class to represent a version of the bible
  private:
